@@ -3,6 +3,7 @@ package com.guitar.db;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -12,11 +13,13 @@ import javax.persistence.PersistenceContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.guitar.db.model.Model;
+import com.guitar.db.repository.ModelJpaRepository;
 import com.guitar.db.repository.ModelRepository;
 
 @ContextConfiguration(locations={"classpath:com/guitar/db/applicationTests-context.xml"})
@@ -25,6 +28,9 @@ public class ModelPersistenceTests {
 	@Autowired
 	private ModelRepository modelRepository;
 
+	@Autowired
+	private ModelJpaRepository modelJpaRepository;
+	
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -49,6 +55,10 @@ public class ModelPersistenceTests {
 		
 		//delete BC location now
 		modelRepository.delete(otherModel);
+		
+		
+		//custom repository test
+		modelJpaRepository.aCustomMethod();
 	}
 
 	@Test
@@ -62,10 +72,19 @@ public class ModelPersistenceTests {
 		List<Model> mods = modelRepository.getModelsByPriceRangeAndWoodType(BigDecimal.valueOf(1000L), BigDecimal.valueOf(2000L), "Maple");
 		assertEquals(3, mods.size());
 	}
+	
+	@Test
+	public void testGetModelsByPriceRangeAndWoodTypeWithPaging() throws Exception {
+		Page<Model> mods = modelRepository.getModelsByPriceRangeAndWoodTypeWithPaging(BigDecimal.valueOf(1000L), BigDecimal.valueOf(2000L), "Maple");
+		assertEquals(2, mods.getSize());
+	}
 
 	@Test
 	public void testGetModelsByType() throws Exception {
-		List<Model> mods = modelRepository.getModelsByType("Electric");
+		List<String> types = new ArrayList<>();
+		types.add("Electric");
+		types.add("Acoustic");
+		List<Model> mods = modelJpaRepository.getByModelTypeNameIn(types);
 		assertEquals(4, mods.size());
 	}
 }
